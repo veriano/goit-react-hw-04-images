@@ -1,43 +1,35 @@
-import React, { Component } from "react";
+import { useState } from "react";
 import PropTypes from 'prop-types';
 import { toast } from 'react-toastify';
 import './Searchbar.css';
 
-class Searchbar extends Component {
-    state = {
-        name: '',
-        page: 1,
-    }
+function Searchbar({ onSubmitHandler }) {
+    const [name, setName] = useState('');
+    const [page, setPage] = useState(1);
 
-    handleChange = e => {
+    const handleChange = e => {
         const { value } = e.currentTarget;
-        console.log(value);
 
-        this.setState({ name: value })
+        setName(value);
     }
 
-    handleSubmit = e => {
+    const handleSubmit = e => {
         e.preventDefault();
 
-        if(this.state.name.trim() === '') {
+        if(name.trim() === '') {
             toast.error('Пожалуйста введите поисковое слово.');
             return;
         }
 
-        this.props.onSubmitHandler(this.state);
+        onSubmitHandler({ name, page });
 
-        this.reset();
+        setName('');
+        setPage(1);
     }
-
-    reset() {
-          this.setState({ name: '' })
-    }
-
-    render() {
 
         return (
             <header className="Searchbar">
-                <form className="SearchForm" onSubmit={ this.handleSubmit }>
+                <form className="SearchForm" onSubmit={ handleSubmit }>
                     <button type="submit" className="SearchForm-button">
                         <span className="SearchForm-button-label">Search</span>
                     </button>
@@ -45,7 +37,7 @@ class Searchbar extends Component {
                     <input
                         className="SearchForm-input"
                         type="text"
-                        onChange={ this.handleChange }
+                        onChange={ handleChange }
                         autoComplete="off"
                         autoFocus
                         placeholder="Search images and photos"
@@ -54,7 +46,7 @@ class Searchbar extends Component {
             </header>
 
         )
-    }
+    
 }
 
 Searchbar.propTypes = {

@@ -2,28 +2,25 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import './ImageGalleryItem.css';
 
-function ImageGalleryItem({ articles, onImgClick }) {
+function ImageGalleryItem({ image, largeImage, tags, onModal }) {
 
     return (
         <>
-            {articles.map(({ id, webformatURL, largeImageURL, tags }) => 
-                    <li className="ImageGalleryItem" key={ id }>
-                    <img src={webformatURL} 
-                    alt={ tags } className="ImageGalleryItem-image" 
-                    onClick={() => onImgClick(largeImageURL)} />
-                    </li>
-            )}
+            <li className="ImageGalleryItem">
+            <img src={ image } 
+            alt={ tags } className="ImageGalleryItem-image" 
+            onClick={() => onModal(largeImage)} />
+            </li>
         </>
     )
 
 }
 
 ImageGalleryItem.propTypes = {
-    id: PropTypes.string,
-    webformatURL: PropTypes.string,
-    largeImageURL: PropTypes.string,
+    image: PropTypes.string,
+    largeImage: PropTypes.string,
     tags: PropTypes.string,
-    onImgClick: PropTypes.func,
+    onModal: PropTypes.func,
 }
 
 export default ImageGalleryItem;

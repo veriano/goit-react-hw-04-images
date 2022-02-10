@@ -1,48 +1,52 @@
-import React, { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 import Searchbar from "./Components/Searchbar";
 import Button from "./Components/Button";
 import ImageGallery from "./Components/ImageGallery";
-import ImageGalleryItem from './Components/ImageGalleryItem';
 import Modal from "./Components/Modal";
 import Loader from "./Components/Loader"; 
 const axios = require('axios');
 
 
-class App extends Component {
-    state = {
-        hits: [],
-        name: '',
-        page: 1,
-        showModal: false,
-        loading: false,
-        modalImage: ''
+function App() {
+    const [hits, setHits] = useState([]);
+    const [name, setName] = useState('');
+    const [page, setPage] = useState(1);
+    const [showModal, setShowModal] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [modalImage, setModalImage] = useState('');
+    const [visibleLoadMore, setVisibleLoadMore] = useState(false);
+
+    useEffect(() => {
+        if(!name) {
+            return;
+        }
+        pixabayApi(name,page);
+    },[name,page])
+
+    const openModal = largeImageURL => {
+        setShowModal(true);
+        setModalImage(largeImageURL);
     }
 
-    openModal = largeImageURL => {
-        this.setState({
-          showModal: true,
-          modalImage: largeImageURL,
-        });
+    const toggleModal = () => {
+        setShowModal(!showModal);
     }
 
-    toggleModal = () => {
-        this.setState(({ showModal }) => ({
-            showModal: !showModal
-        }));
+    const getValue = data => {
+        setName(data.name);
+        setPage(data.page);
+        setHits([]);
     }
 
-    getValue = data => {
-        this.setState({ name: data.name, page: data.page, hits: []});
-        const { name, page } = data;
-        const response = this.pixabayApi(name, page);
-        return response;
+    const onLoadMore = () => {
+        setPage(page => page + 1);
     }
 
-    async pixabayApi(name, page) {        
-        this.setState({ loading: true });
+    async function pixabayApi(name, page) {        
+        setLoading( true );
 
          const searchParams = new URLSearchParams({
             image_type: 'photo',
@@ -55,53 +59,54 @@ class App extends Component {
         const API_KEY = '24463326-9b2d5a427846ea9fa30299421';
 
         try {
-            const response = await axios(`${BASE_URL}/?key=${API_KEY}&q=${name}&page=${page}&${searchParams}`);
-            if(response.data.hits.length < 1) {
-                this.setState({ loading: false })
-                toast.error('Пожалуйста введите корректное поисковое слово.');
-                return;
-            }
-            this.setState(({ loading, hits, page }) => {
-                return {
-                    loading: !loading,
-                    hits: [...hits,...response.data.hits],
-                    page: page + 1,
+            const data = await axios(`${BASE_URL}/?key=${API_KEY}&q=${name}&page=${page}&${searchParams}`)
+           
+            .then(data => {
+                    const totalPages = data.data.totalHits / data.data.hits.length;
+                if (data.data.hits.length < 1) {
+                    setLoading(false);
+                    toast.error('Пожалуйста введите корректное поисковое слово.');
+                    return;
                 }
+
+                setLoading(false);
+                setHits(prevHits => [...prevHits, ...data.data.hits]);
+                setVisibleLoadMore(true);
+
+                if (page >= totalPages) {
+                    setLoading(false);
+                    setVisibleLoadMore(false);
+                    toast.error('Извините, но это были последние изображения.');
+                }
+                
+                return data.data.hits;
                 });
-            return response.data.hits;
+            return data;
         } catch (error) {
-            this.setState({ error });
+            console.log(error);
         }
     }
-    
-
-    render() {
-        const { hits, showModal, name, page, loading, modalImage } = this.state;
-       
 
         return (
             <div>
-                <Searchbar onSubmitHandler={ this.getValue } />
+                <Searchbar onSubmitHandler={ getValue } />
 
                 <ToastContainer autoClose={ 4000 } />
 
                 { loading && <Loader />}
 
                 {hits && (
-                <ImageGallery>
-                    <ImageGalleryItem articles={ hits } onImgClick={ this.openModal }/>
-                </ImageGallery>)}
+                <ImageGallery articles={ hits } onImgClick={ openModal } />)}
 
                 {showModal && (
-                <Modal onClose={ this.toggleModal }>
-                <img src={modalImage} alt="largeImage" className='image' />
+                <Modal onClose={ toggleModal }>
+                <img src={ modalImage } alt="largeImage" className='image' />
                 </Modal> )}
 
-                { hits.length > 0 && (
-                <Button onButtonClick={ () => this.pixabayApi(name, page) } />)}
+                { visibleLoadMore && (
+                <Button onButtonClick={ onLoadMore } />)}
             </div>
         )
-    }
 }
 
 export default App;

@@ -1,20 +1,28 @@
-import { Component } from 'react/cjs/react.production.min';
+import React from 'react';
 import PropTypes from 'prop-types';
+import ImageGalleryItem from '../ImageGalleryItem';
 import './ImageGallery.css';
 
-class ImageGallery extends Component {
+function ImageGallery ({ articles, onImgClick }) {
     
-    render() {
-        const { children } = this.props;
     return (
-        <ul className="ImageGallery">
-            { children }
-        </ul>
+        <>
+            <ul className="ImageGallery">
+                {articles.map(({ id, webformatURL, largeImageURL, tags }) =>
+                    <ImageGalleryItem key={ id } 
+                        image={ webformatURL }
+                        largeImage={ largeImageURL }
+                        tags={ tags }
+                        onModal={ onImgClick }
+                    />
+                )}
+            </ul>
+        </>
     )
-    }
 }
 ImageGallery.propTypes = {
-    children: PropTypes.node.isRequired,
+    articles: PropTypes.array,
+    onImgClick: PropTypes.func,
 }
 
 export default ImageGallery;
