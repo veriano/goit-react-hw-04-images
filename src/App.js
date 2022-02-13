@@ -19,6 +19,7 @@ function App() {
     const [modalImage, setModalImage] = useState('');
     const [visibleLoadMore, setVisibleLoadMore] = useState(false);
 
+
     useEffect(() => {
         if(!name) {
             return;
@@ -35,14 +36,14 @@ function App() {
         setShowModal(!showModal);
     }
 
-    const getValue = data => {
-        setName(data.name);
-        setPage(data.page);
+    const getValue = ({ name, page }) => {
+        setName(name);
+        setPage(page);
         setHits([]);
     }
 
     const onLoadMore = () => {
-        setPage(page => page + 1);
+        setPage(page + 1);
     }
 
     async function pixabayApi(name, page) {        
@@ -59,18 +60,19 @@ function App() {
         const API_KEY = '24463326-9b2d5a427846ea9fa30299421';
 
         try {
-            const data = await axios(`${BASE_URL}/?key=${API_KEY}&q=${name}&page=${page}&${searchParams}`)
-           
-            .then(data => {
-                    const totalPages = data.data.totalHits / data.data.hits.length;
-                if (data.data.hits.length < 1) {
+            const response = await axios(`${BASE_URL}/?key=${API_KEY}&q=${name}&page=${page}&${searchParams}`)
+            
+            .then(response => {
+                    const totalPages = response.data.totalHits / response.data.hits.length;
+                if (response.data.hits.length < 1) {
                     setLoading(false);
-                    toast.error('Пожалуйста введите корректное поисковое слово.');
+                    setVisibleLoadMore(false);
+                    toast.error('Пожалуйста введите корректное поисковое слово или возможно изображения закончились');
                     return;
                 }
 
                 setLoading(false);
-                setHits(prevHits => [...prevHits, ...data.data.hits]);
+                setHits(prevHits => [...prevHits, ...response.data.hits]);
                 setVisibleLoadMore(true);
 
                 if (page >= totalPages) {
@@ -79,14 +81,13 @@ function App() {
                     toast.error('Извините, но это были последние изображения.');
                 }
                 
-                return data.data.hits;
+                return response.data.hits;
                 });
-            return data;
+            return response;
         } catch (error) {
             console.log(error);
         }
     }
-
         return (
             <div>
                 <Searchbar onSubmitHandler={ getValue } />
